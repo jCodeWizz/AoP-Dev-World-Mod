@@ -6,9 +6,9 @@ import dev.codewizz.modding.annotations.Priority;
 import dev.codewizz.modding.events.AddObjectEvent;
 import dev.codewizz.modding.events.CreateWorldEvent;
 import dev.codewizz.modding.events.EventListener;
+import dev.codewizz.modding.events.GenerateChunkEvent;
 import dev.codewizz.world.Chunk;
 import dev.codewizz.world.World;
-import dev.codewizz.world.tiles.DirtTile;
 
 public class OnCreateWorld implements EventListener {
 
@@ -17,27 +17,32 @@ public class OnCreateWorld implements EventListener {
 	public void onCreateWorld(CreateWorldEvent e) {
 		World w = e.getWorld();
 		
-		w.showInfoSartMenu = false;
+		w.showInfoStartMenu = false;
 		
 		w.chunks.clear();
 		w.chunkTree.clear();
+		w.tree.clear();
+		w.generationQueue.clear();
 		
-		for(int i = 0; i < Main.SIZE; i++) {
-			for(int j = 0; j < Main.SIZE; j++) {
-				Chunk c = w.addChunk(i, j);
-				c.init();
-				c.markGenerated();
-				
-				for(int ii = 0; ii < c.getGrid().length; ii++) {
-					for(int jj = 0; jj < c.getGrid().length; jj++) {
-						if(ii == 0 || jj == 0) {
-							c.getGrid()[ii][jj].setTile(new DirtTile());
-						}
-					}
+		if(Main.SIZE <= 1) {
+			Chunk c = w.addChunk(0, 0);
+			c.markGenerated();
+			c.init();
+		} else {
+			for(int i = -Main.SIZE/2; i <= Main.SIZE/2; i++) {
+				for(int j = -Main.SIZE/2; j <= Main.SIZE/2; j++) {
+					Chunk c = w.addChunk(i, j);
+					c.init();
+					c.markGenerated();
 				}
-				
 			}
 		}
+	}
+	
+	@EventCall
+	@Priority(priority = Priorities.SUPER_HIGH)
+	public void onGenerateChunk(GenerateChunkEvent e) {
+		e.cancel();
 	}
 	
 	@EventCall
